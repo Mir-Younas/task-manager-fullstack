@@ -1,0 +1,447 @@
+# Task Management API
+
+A RESTful Task Management API built with **Node.js**, **Express**, **TypeScript**, **MongoDB**, and **Mongoose**.
+
+The API provides secure user authentication, login abuse protection, role-based authorization, task CRUD operations, request validation, centralized error handling, HTTP request logging, Swagger/OpenAPI documentation, automated integration testing, and cloud deployment.
+
+## Live Deployment
+
+### Health Check
+
+https://task-api-production-8979.up.railway.app/health
+
+### Swagger API Documentation
+
+https://task-api-production-8979.up.railway.app/api-docs
+
+The API is deployed on **Railway** and uses **MongoDB Atlas** as the production database.
+
+## Features
+
+- User signup, login, and logout
+- JWT authentication using HTTP-only cookies
+- Password hashing with bcrypt
+- Strong password validation with an 8–64 character length requirement
+- Login endpoint rate limiting
+- IP-based protection against excessive login requests
+- Account-level failed login attempt tracking
+- Progressive login cooldowns after repeated failed attempts
+- Atomic failed-login updates to prevent concurrency issues
+- Successful login resets failed login attempts and cooldown state
+- User roles: `user` and `admin`
+- User status: `active` and `blocked`
+- Role-based task authorization
+- Complete Task CRUD operations
+- Task ownership using author references
+- Task author responses expose only the author's name
+- Task updates reject requests when no values have changed
+- Zod request validation
+- Centralized error handling
+- Custom application errors
+- MongoDB integration with Mongoose
+- Morgan HTTP request logging
+- Swagger/OpenAPI documentation
+- CORS configuration for cross-origin API access
+- Express trust proxy configuration for Railway deployment
+- Jest integration testing
+- Isolated test database using MongoDB Memory Server
+- Concurrent signup race-condition testing
+- Separate linting for application and test code
+- Node.js version enforcement with engine strict mode
+- Railway deployment
+- MongoDB Atlas production database
+
+## Tech Stack
+
+- Node.js
+- Express
+- TypeScript
+- MongoDB
+- MongoDB Atlas
+- Mongoose
+- JSON Web Token (JWT)
+- bcrypt
+- Zod
+- Cookie Parser
+- CORS
+- Morgan
+- express-rate-limit
+- Swagger / OpenAPI
+- Jest
+- Supertest
+- MongoDB Memory Server
+- SWC
+- ESLint
+- Railway
+
+## API Endpoints
+
+### Health
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/health` | Check API status |
+
+### Authentication
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | `/api/auth/signup` | Register a new user |
+| POST | `/api/auth/login` | Authenticate a user |
+| POST | `/api/auth/logout` | Logout the authenticated user |
+
+### Tasks
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | `/api/tasks` | Create a task |
+| GET | `/api/tasks` | Fetch all tasks |
+| GET | `/api/tasks/:taskId` | Fetch a task by ID |
+| PATCH | `/api/tasks/:taskId` | Update a task |
+| DELETE | `/api/tasks/:taskId` | Delete a task |
+
+## Authorization
+
+All task endpoints require authentication.
+
+- Users can create and view tasks.
+- Users can update and delete their own tasks.
+- Admins can update and delete any task.
+- Blocked users cannot access protected endpoints.
+
+## Login Security
+
+The authentication system includes both IP-level and account-level protection against repeated login attempts.
+
+### Login Rate Limiting
+
+The `/api/auth/login` endpoint uses `express-rate-limit` to restrict excessive login requests from the same IP address.
+
+When the configured request limit is exceeded, the API returns:
+
+```json
+{
+  "success": false,
+  "message": "Too many login requests. Please try again later."
+}
+```
+
+with HTTP status:
+
+```text
+429 Too Many Requests
+```
+
+Rate limiting runs before the login controller and service, preventing excessive requests from reaching password verification and database login logic.
+
+### Failed Login Protection
+
+Failed password attempts are also tracked at the user-account level.
+
+Progressive cooldowns are applied as follows:
+
+| Failed Attempt | Result |
+| --- | --- |
+| 1–4 | `401 Unauthorized` |
+| 5 | 30-second cooldown |
+| 6 | 1-minute cooldown |
+| 7 | 5-minute cooldown |
+| 8+ | 15-minute cooldown |
+
+Requests made while an account cooldown is active do not increase the failed-login counter or extend the existing cooldown.
+
+A successful login resets:
+
+```text
+failedLoginAttempts = 0
+loginLockedUntil = null
+```
+
+Failed-login state updates are performed atomically in MongoDB to prevent concurrent login requests from overwriting the failed-attempt counter.
+
+The IP rate limiter and account-level cooldown operate independently:
+
+- The rate limiter protects the login endpoint from request flooding.
+- Account-level protection prevents repeated password guessing against a specific account.
+- Either layer can return `429 Too Many Requests` depending on which restriction is active.
+
+## API Documentation
+
+### Local Swagger UI
+
+http://localhost:5000/api-docs
+
+### Production Swagger UI
+
+https://task-api-production-8979.up.railway.app/api-docs
+
+The Swagger configuration provides both local and production server options. CORS allows the deployed Swagger UI to send requests to a locally running API when the local development server is selected.
+
+The documentation includes authentication requirements, request schemas, validation rules, path parameters, and response status codes.
+
+## Project Structure
+
+```text
+src/
+├── config/
+│   ├── db.ts
+│   └── swagger.ts
+├── constants/
+├── controllers/
+│   ├── auth.controller.ts
+│   └── task.controller.ts
+├── docs/
+│   ├── auth.swagger.ts
+│   └── task.swagger.ts
+├── middleware/
+│   ├── auth.middleware.ts
+│   ├── error.middleware.ts
+│   ├── rate-limit.middleware.ts
+│   └── validate.middleware.ts
+├── models/
+│   ├── user.model.ts
+│   └── task.model.ts
+├── routes/
+│   ├── auth.routes.ts
+│   └── task.routes.ts
+├── services/
+│   ├── auth.service.ts
+│   └── task.service.ts
+├── types/
+├── utils/
+│   ├── app-error.ts
+│   ├── async-handler.ts
+│   ├── auth-cookie.ts
+│   ├── jwt.ts
+│   └── login-security.ts
+├── validation/
+│   ├── auth.schema.ts
+│   └── task.schema.ts
+├── app.ts
+└── server.ts
+
+tests/
+├── setup.ts
+├── auth.test.ts
+└── task.test.ts
+
+.env.example
+eslint.config.mjs
+jest.config.cjs
+tsconfig.json
+```
+
+## Environment Variables
+
+An `.env.example` file is included in the project to show the environment variables required to run the API.
+
+```env
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/task-api
+JWT_SECRET=replace_with_a_secure_random_secret
+CLIENT_URL=https://your-client-domain.com
+```
+
+For local development, create a `.env` file in the project root using `.env.example` as a template:
+
+```bash
+cp .env.example .env
+```
+
+Then replace the example values with your own configuration.
+
+- `NODE_ENV` — Application environment, such as `development` or `production`.
+- `PORT` — Port used by the Express server.
+- `MONGODB_URI` — MongoDB connection string.
+- `JWT_SECRET` — Secret key used to sign and verify JWT access tokens.
+- `CLIENT_URL` — Allowed client origin used by the CORS configuration.
+
+> **Security:** Never commit your real `.env` file, MongoDB credentials, or JWT secret to the repository. The `.env.example` file contains placeholder values only.
+
+## Installation
+
+Install the project dependencies:
+
+```bash
+npm install
+```
+
+## Development
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The API runs locally at:
+
+http://localhost:5000
+
+## Testing
+
+The project includes integration tests for the authentication and task APIs using **Jest**, **Supertest**, and **MongoDB Memory Server**.
+
+Tests run against an isolated temporary MongoDB instance and do not use the production MongoDB Atlas database.
+
+Run all tests:
+
+```bash
+npm test
+```
+
+The test suite currently contains **23 integration tests** across two test suites:
+
+- Authentication API tests
+- Task API tests
+
+### Authentication Tests
+
+The authentication test suite covers:
+
+- Successful user signup
+- Invalid email validation
+- Weak password validation
+- Duplicate email handling
+- Concurrent signup requests using the same email
+- Successful login
+- Incorrect password handling
+- Nonexistent user handling
+- Invalid login request validation
+- Logout
+
+The concurrent signup test verifies that simultaneous signup requests using the same email result in only one account being created while the remaining requests return `409 Conflict` instead of server errors.
+
+### Task Tests
+
+The task test suite covers:
+
+- Unauthenticated request rejection
+- Task creation
+- Task validation
+- Fetching all tasks
+- Fetching a task by ID
+- Invalid task ID handling
+- Missing task handling
+- Updating a task by its author
+- Empty update validation
+- Rejecting updates when no task values have changed
+- Preventing another user from updating a task
+- Deleting a task by its author
+- Preventing another user from deleting a task
+
+Task responses populate the author with the author's name only. The author's email address and user ID are not exposed in task responses.
+
+## Code Quality
+
+Lint the application source code:
+
+```bash
+npm run lint
+```
+
+Lint the test code separately:
+
+```bash
+npm run lint:test
+```
+
+Build the production TypeScript source:
+
+```bash
+npm run build
+```
+
+Run the integration test suite:
+
+```bash
+npm test
+```
+
+A successful project check should complete all of the following without errors:
+
+```bash
+npm run lint
+npm run lint:test
+npm run build
+npm test
+```
+
+The current test suite passes all **23 integration tests**.
+
+## Production
+
+The application is deployed on **Railway** and uses **MongoDB Atlas** as the production database.
+
+Express is configured to trust Railway's proxy so IP-based rate limiting can correctly identify forwarded client IP addresses in production.
+
+Railway builds and starts the application using the scripts defined in `package.json`:
+
+```bash
+npm run build
+npm start
+```
+
+Use the production Swagger UI to explore and test the deployed API:
+
+https://task-api-production-8979.up.railway.app/api-docs
+
+## Node.js Version & Engine Enforcement
+
+The project requires:
+
+```text
+Node.js >= 22.14.0 < 23
+```
+
+The supported Node.js version is defined in `package.json` using the `engines` field.
+
+Engine strict mode is enabled in `.npmrc`:
+
+```text
+engine-strict=true
+```
+
+Installing dependencies with an unsupported Node.js version will fail with an `EBADENGINE` error.
+
+## Error Handling
+
+Application errors follow a consistent JSON response format:
+
+```json
+{
+  "success": false,
+  "message": "Error message"
+}
+```
+
+Expected application and client errors return appropriate HTTP status codes.
+
+Unexpected server errors return a generic `500 Internal Server Error` response while the original error is logged internally.
+
+Malformed JSON requests are handled by the centralized error middleware and return a `400 Bad Request` response.
+
+Authentication protection can also return `429 Too Many Requests` when either the login rate limit or account-level login cooldown is active.
+
+Task update requests that contain valid fields but do not change any existing task values return a `400 Bad Request` response with a `No changes detected` message.
+
+## Request Logging
+
+Morgan is used to log HTTP requests during normal application execution.
+
+Example:
+
+```text
+POST /api/auth/login 200 24.312 ms - 128
+```
+
+Request logging is disabled during automated tests to keep the Jest output clean.
+
+## Project Context
+
+This project was developed as part of a software engineering internship assignment.
+
+## License
+
+ISC
