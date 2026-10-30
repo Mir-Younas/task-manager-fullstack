@@ -1,12 +1,16 @@
+
 import { Schema, model } from "mongoose";
-import { UserRole, UserStatus } from "../constants/auth.constants";
+
+import { UserRole, UserStatus } from "../enums/user.enums";
 
 export type UserType = {
   name: string;
   email: string;
-  password: string;
+  password?: string;
+  googleId?: string;
   role: UserRole;
   status: UserStatus;
+  isEmailVerified: boolean;
   failedLoginAttempts: number;
   loginLockedUntil: Date | null;
   createdAt: Date;
@@ -31,8 +35,14 @@ const userSchema = new Schema<UserType>(
 
     password: {
       type: String,
-      required: true,
+      required: false,
       select: false,
+    },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
 
     role: {
@@ -46,6 +56,12 @@ const userSchema = new Schema<UserType>(
       type: String,
       enum: Object.values(UserStatus),
       default: UserStatus.ACTIVE,
+      required: true,
+    },
+
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
       required: true,
     },
 

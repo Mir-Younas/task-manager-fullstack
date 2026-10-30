@@ -10,7 +10,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
       title: "Task Management API",
       version: "1.0.0",
       description:
-        "RESTful API for user authentication, task management, role-based authorization, and account status control.",
+        "RESTful API for user authentication, task management, role-based authorization, Google OAuth, and account status control.",
     },
 
     servers: [
@@ -35,7 +35,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
     },
   },
 
-  apis: ["./src/docs/*.ts"],
+  apis: ["./src/docs/**/*.ts"],
 };
 
 export const swaggerSpec = swaggerJsdoc(swaggerOptions);

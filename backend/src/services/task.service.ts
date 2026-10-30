@@ -1,6 +1,6 @@
 import { isValidObjectId } from "mongoose";
 
-import { UserRole } from "../constants/auth.constants";
+import { UserRole } from "../enums/user.enums";
 import { Task } from "../models/task.model";
 import { AppError } from "../utils/app-error";
 import { CreateTaskInput, UpdateTaskInput } from "../validation/task.schema";

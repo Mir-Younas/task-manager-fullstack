@@ -1,10 +1,5 @@
-import {
-  NextFunction,
-  Request,
-  RequestHandler,
-  Response,
-} from "express";
-import { ParamsDictionary } from "express-serve-static-core";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
+import type { ParamsDictionary } from "express-serve-static-core";
 
 export const asyncHandler = <
   ReqBody = Record<string, never>,

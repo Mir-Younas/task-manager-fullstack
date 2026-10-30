@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { TaskStatus } from "../constants/task.constants";
+import { TaskStatus } from "../enums/task.enums";
 
 export const createTaskSchema = z.object({
   title: z
