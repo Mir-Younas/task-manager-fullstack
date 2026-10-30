@@ -1,5 +1,5 @@
 import { Schema, model, Types } from "mongoose";
-import { TaskStatus } from "../constants/task.constants";
+import { TaskStatus } from "../enums/task.enums";
 
 export type TaskType = {
   title: string;

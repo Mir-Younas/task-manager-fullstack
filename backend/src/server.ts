@@ -2,6 +2,9 @@ import 'dotenv/config';
 
 import app from './app';
 import { connectDB } from './config/db';
+import { validateEnv } from './config/validate-env';
+
+validateEnv();
 
 const PORT = process.env.PORT || 5000;
 

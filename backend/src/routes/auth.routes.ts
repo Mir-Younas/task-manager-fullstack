@@ -1,14 +1,93 @@
 import { Router } from "express";
 
-import { login, logout, signup } from "../controllers/auth.controller";
+import {
+  signupHandler,
+  loginHandler,
+  logoutHandler,
+  refreshSessionHandler,
+  getMeHandler,
+  verifyEmailHandler,
+  resendVerificationHandler,
+  forgotPasswordHandler,
+  resetPasswordHandler,
+  googleAuthHandler,
+  googleAuthCallbackHandler,
+} from "../controllers/auth.controller";
+
+import { authenticate } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
-import { loginSchema, signupSchema } from "../validation/auth.schema";
-import { loginRateLimiter } from "../middleware/rate-limit.middleware";
+
+import {
+  authRateLimiter,
+  loginRateLimiter,
+  emailRateLimiter,
+} from "../middleware/rate-limit.middleware";
+
+import {
+  signupSchema,
+  loginSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "../validation/auth.schema";
 
 const authRouter = Router();
 
-authRouter.post("/signup", validate(signupSchema), signup);
-authRouter.post("/login", loginRateLimiter, validate(loginSchema), login);
-authRouter.post("/logout", logout);
+// Registration
+authRouter.post(
+  "/signup",
+  authRateLimiter,
+  validate(signupSchema),
+  signupHandler,
+);
+
+// Login
+authRouter.post(
+  "/login",
+  loginRateLimiter,
+  validate(loginSchema),
+  loginHandler,
+);
+
+// Google OAuth
+authRouter.get("/google", authRateLimiter, googleAuthHandler);
+
+authRouter.get("/google/callback", googleAuthCallbackHandler);
+
+// Current authenticated user
+authRouter.get("/me", authenticate, getMeHandler);
+
+// Email verification
+authRouter.post(
+  "/verify-email",
+  validate(verifyEmailSchema),
+  verifyEmailHandler,
+);
+
+authRouter.post(
+  "/resend-verification",
+  emailRateLimiter,
+  validate(resendVerificationSchema),
+  resendVerificationHandler,
+);
+
+// Password recovery
+authRouter.post(
+  "/forgot-password",
+  emailRateLimiter,
+  validate(forgotPasswordSchema),
+  forgotPasswordHandler,
+);
+
+authRouter.post(
+  "/reset-password",
+  validate(resetPasswordSchema),
+  resetPasswordHandler,
+);
+
+// Session management
+authRouter.post("/refresh", refreshSessionHandler);
+authRouter.post("/logout", logoutHandler);
 
 export default authRouter;
