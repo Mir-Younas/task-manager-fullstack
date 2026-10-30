@@ -1,6 +1,4 @@
 
-import "dotenv/config";
-
 import request from "supertest";
 import {
   beforeEach,
@@ -14,16 +12,22 @@ import app from "../src/app";
 import { User } from "../src/models/user.model";
 import { EmailVerificationToken } from "../src/models/email-verification-token.model";
 import { emailService } from "../src/services/email.service";
+import { registerTestUser } from "./helpers/auth.helper";
 
-jest.spyOn(emailService, "sendVerificationEmail").mockImplementation(
-  async () => {},
-);
+jest
+  .spyOn(emailService, "sendVerificationEmail")
+  .mockImplementation(async () => {});
 
 describe("Auth API", () => {
   const validUser = {
     name: "Test User",
     email: "test@example.com",
     password: "Test@1234",
+  };
+
+  const loginCredentials = {
+    email: validUser.email,
+    password: validUser.password,
   };
 
   beforeEach(async () => {
@@ -62,10 +66,7 @@ describe("Auth API", () => {
     it("should reject an invalid email", async () => {
       const response = await request(app)
         .post("/api/auth/signup")
-        .send({
-          ...validUser,
-          email: "invalid-email",
-        });
+        .send({ ...validUser, email: "invalid-email" });
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
@@ -74,19 +75,14 @@ describe("Auth API", () => {
     it("should reject a weak password", async () => {
       const response = await request(app)
         .post("/api/auth/signup")
-        .send({
-          ...validUser,
-          password: "password",
-        });
+        .send({ ...validUser, password: "password" });
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
     });
 
     it("should reject a duplicate email", async () => {
-      await request(app)
-        .post("/api/auth/signup")
-        .send(validUser);
+      await registerTestUser(validUser);
 
       const response = await request(app)
         .post("/api/auth/signup")
@@ -110,36 +106,24 @@ describe("Auth API", () => {
 
       const responses = await Promise.all(requests);
 
-      const createdResponses = responses.filter(
-        (response) => response.status === 201,
-      );
+      expect(responses.filter((res) => res.status === 201))
+        .toHaveLength(1);
 
-      const conflictResponses = responses.filter(
-        (response) => response.status === 409,
-      );
+      expect(responses.filter((res) => res.status === 409))
+        .toHaveLength(9);
 
-      const serverErrorResponses = responses.filter(
-        (response) => response.status >= 500,
-      );
-
-      expect(createdResponses).toHaveLength(1);
-      expect(conflictResponses).toHaveLength(9);
-      expect(serverErrorResponses).toHaveLength(0);
+      expect(responses.filter((res) => res.status >= 500))
+        .toHaveLength(0);
     });
   });
 
   describe("POST /api/auth/login", () => {
     it("should reject login when email is not verified", async () => {
-      await request(app)
-        .post("/api/auth/signup")
-        .send(validUser);
+      await registerTestUser(validUser);
 
       const response = await request(app)
         .post("/api/auth/login")
-        .send({
-          email: validUser.email,
-          password: validUser.password,
-        });
+        .send(loginCredentials);
 
       expect(response.status).toBe(403);
       expect(response.body.success).toBe(false);
@@ -149,27 +133,15 @@ describe("Auth API", () => {
     });
 
     it("should login with valid credentials after verification", async () => {
-      await request(app)
-        .post("/api/auth/signup")
-        .send(validUser);
-
-      await User.updateOne(
-        { email: validUser.email },
-        { $set: { isEmailVerified: true } },
-      );
+      await registerTestUser(validUser, { verified: true });
 
       const response = await request(app)
         .post("/api/auth/login")
-        .send({
-          email: validUser.email,
-          password: validUser.password,
-        });
+        .send(loginCredentials);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.message).toBe(
-        "Login successful",
-      );
+      expect(response.body.message).toBe("Login successful");
 
       expect(response.body.user).toMatchObject({
         name: validUser.name,
@@ -181,9 +153,7 @@ describe("Auth API", () => {
     });
 
     it("should reject an incorrect password", async () => {
-      await request(app)
-        .post("/api/auth/signup")
-        .send(validUser);
+      await registerTestUser(validUser);
 
       const response = await request(app)
         .post("/api/auth/login")
@@ -229,33 +199,21 @@ describe("Auth API", () => {
 
   describe("GET /api/auth/me", () => {
     it("should reject unauthenticated requests", async () => {
-      const response = await request(app)
-        .get("/api/auth/me");
+      const response = await request(app).get("/api/auth/me");
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
     });
 
     it("should return the authenticated user", async () => {
-      await request(app)
-        .post("/api/auth/signup")
-        .send(validUser);
-
-      await User.updateOne(
-        { email: validUser.email },
-        { $set: { isEmailVerified: true } },
-      );
+      await registerTestUser(validUser, { verified: true });
 
       const agent = request.agent(app);
 
-      const loginResponse = await agent
+      await agent
         .post("/api/auth/login")
-        .send({
-          email: validUser.email,
-          password: validUser.password,
-        });
-
-      expect(loginResponse.status).toBe(200);
+        .send(loginCredentials)
+        .expect(200);
 
       const response = await agent.get("/api/auth/me");
 
@@ -275,29 +233,16 @@ describe("Auth API", () => {
     });
 
     it("should refresh an authenticated session", async () => {
-      await request(app)
-        .post("/api/auth/signup")
-        .send(validUser);
-
-      await User.updateOne(
-        { email: validUser.email },
-        { $set: { isEmailVerified: true } },
-      );
+      await registerTestUser(validUser, { verified: true });
 
       const agent = request.agent(app);
 
-      const loginResponse = await agent
+      await agent
         .post("/api/auth/login")
-        .send({
-          email: validUser.email,
-          password: validUser.password,
-        });
+        .send(loginCredentials)
+        .expect(200);
 
-      expect(loginResponse.status).toBe(200);
-
-      const response = await agent.post(
-        "/api/auth/refresh",
-      );
+      const response = await agent.post("/api/auth/refresh");
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -314,7 +259,6 @@ describe("Auth API", () => {
         .post("/api/auth/logout");
 
       expect(response.status).toBe(200);
-
       expect(response.body).toEqual({
         success: true,
         message: "Logout successful",

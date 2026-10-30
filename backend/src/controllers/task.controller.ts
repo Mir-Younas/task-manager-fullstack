@@ -26,8 +26,10 @@ export const handleCreateTask = asyncHandler<CreateTaskInput>(
   },
 );
 
-export const handleFetchTasks = asyncHandler(async (_req, res) => {
-  const tasks = await fetchTasks();
+export const handleFetchTasks = asyncHandler(async (req, res) => {
+  const user = req.user!;
+
+  const tasks = await fetchTasks(user.id, user.role);
 
   return res.status(200).json({
     success: true,
@@ -39,7 +41,9 @@ export const handleFetchTaskById = asyncHandler<
   Record<string, never>,
   TaskParams
 >(async (req, res) => {
-  const task = await fetchTaskById(req.params.taskId);
+  const user = req.user!;
+
+  const task = await fetchTaskById(req.params.taskId, user.id, user.role);
 
   return res.status(200).json({
     success: true,

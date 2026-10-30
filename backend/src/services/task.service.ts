@@ -34,12 +34,27 @@ export const createTask = async (userId: string, body: CreateTaskInput) => {
   return task;
 };
 
-export const fetchTasks = async () => {
-  return Task.find().populate("author", "name -_id").sort({ createdAt: -1 });
+export const fetchTasks = async (userId: string, userRole: UserRole) => {
+  const filter = userRole === UserRole.ADMIN ? {} : { author: userId };
+
+  return Task.find(filter)
+    .populate("author", "name -_id")
+    .sort({ createdAt: -1 });
 };
 
-export const fetchTaskById = async (taskId: string) => {
+export const fetchTaskById = async (
+  taskId: string,
+  userId: string,
+  userRole: UserRole,
+) => {
   const task = await findTaskOrThrow(taskId);
+
+  const isAuthor = task.author.toString() === userId;
+  const isAdmin = userRole === UserRole.ADMIN;
+
+  if (!isAuthor && !isAdmin) {
+    throw new AppError("You do not have permission to view this task", 403);
+  }
 
   await task.populate("author", "name -_id");
 
@@ -58,7 +73,7 @@ export const updateTask = async (
   const isAdmin = userRole === UserRole.ADMIN;
 
   if (!isAuthor && !isAdmin) {
-    throw new AppError("You are not allowed to update this task", 403);
+    throw new AppError("You do not have permission to update this task", 403);
   }
 
   const hasChanges = Object.entries(body).some(
@@ -89,12 +104,8 @@ export const deleteTask = async (
   const isAdmin = userRole === UserRole.ADMIN;
 
   if (!isAuthor && !isAdmin) {
-    throw new AppError("You are not allowed to delete this task", 403);
+    throw new AppError("You do not have permission to delete this task", 403);
   }
 
   await task.deleteOne();
-
-  await task.populate("author", "name -_id");
-
-  return task;
 };
