@@ -1,9 +1,10 @@
-
 import { rateLimit } from "express-rate-limit";
 
 export const loginRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 50,
+
+  skip: () => process.env.NODE_ENV === "test",
 
   standardHeaders: "draft-8",
   legacyHeaders: false,
@@ -18,6 +19,8 @@ export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
 
+  skip: () => process.env.NODE_ENV === "test",
+
   standardHeaders: "draft-8",
   legacyHeaders: false,
 
@@ -30,6 +33,8 @@ export const authRateLimiter = rateLimit({
 export const emailRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
+
+  skip: () => process.env.NODE_ENV === "test",
 
   standardHeaders: "draft-8",
   legacyHeaders: false,

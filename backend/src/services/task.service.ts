@@ -1,9 +1,17 @@
 import { isValidObjectId } from "mongoose";
-
+import type { FilterQuery } from "mongoose";
 import { UserRole } from "../enums/user.enums";
 import { Task } from "../models/task.model";
 import { AppError } from "../utils/app-error";
-import { CreateTaskInput, UpdateTaskInput } from "../validation/task.schema";
+import type {
+  CreateTaskInput,
+  GetTasksQueryInput,
+  UpdateTaskInput,
+} from "../validation/task.schema";
+import { getPaginationMeta, getPaginationSkip } from "../utils/pagination";
+import { escapeRegex } from "../utils/escape-regex";
+
+type TaskFilter = FilterQuery<InstanceType<typeof Task>>;
 
 const validateTaskId = (taskId: string) => {
   if (!isValidObjectId(taskId)) {
@@ -34,12 +42,48 @@ export const createTask = async (userId: string, body: CreateTaskInput) => {
   return task;
 };
 
-export const fetchTasks = async (userId: string, userRole: UserRole) => {
-  const filter = userRole === UserRole.ADMIN ? {} : { author: userId };
+export const fetchTasks = async (
+  userId: string,
+  userRole: UserRole,
+  query: GetTasksQueryInput,
+) => {
+  const { status, search, sort, page, limit } = query;
 
-  return Task.find(filter)
-    .populate("author", "name -_id")
-    .sort({ createdAt: -1 });
+  const filter: TaskFilter = {};
+
+  if (userRole !== UserRole.ADMIN) {
+    filter.author = userId;
+  }
+
+  if (status) {
+    filter.status = status;
+  }
+
+  if (search) {
+    filter.title = {
+      $regex: escapeRegex(search),
+      $options: "i",
+    };
+  }
+
+  const skip = getPaginationSkip({ page, limit });
+  const sortOrder = sort === "oldest" ? 1 : -1;
+
+  const [tasks, total] = await Promise.all([
+    Task.find(filter)
+      .populate("author", "name -_id")
+      .sort({ createdAt: sortOrder, _id: sortOrder })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+
+    Task.countDocuments(filter),
+  ]);
+
+  return {
+    tasks,
+    pagination: getPaginationMeta(total, { page, limit }),
+  };
 };
 
 export const fetchTaskById = async (
