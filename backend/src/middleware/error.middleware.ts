@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 
 import { AppError } from "../utils/app-error";
 import { logger } from "../utils/logger";
+import { ZodError } from "zod";
 
 type HttpError = Error & {
   status?: number;
@@ -19,6 +20,17 @@ export const globalErrorHandler = (
     res.status(err.statusCode).json({
       success: false,
       message: err.message,
+    });
+
+    return;
+  }
+
+  // Zod validation errors
+  if (err instanceof ZodError) {
+    res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors: err.issues,
     });
 
     return;

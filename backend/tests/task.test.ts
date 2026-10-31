@@ -1,6 +1,7 @@
 import request from "supertest";
 import mongoose from "mongoose";
 import { describe, expect, it, jest } from "@jest/globals";
+import { TaskStatus } from "../src/enums/task.enums";
 
 import app from "../src/app";
 import { UserRole } from "../src/enums/user.enums";
@@ -149,6 +150,114 @@ describe("Task API", () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.tasks).toHaveLength(2);
+    });
+
+    // Filtering, searching, sorting, and pagination
+
+    it("should filter tasks by status", async () => {
+      const agent = await createAuthenticatedAgent(user);
+
+      await createTestTask(agent, {
+        title: "Pending task",
+        description: "This task is currently pending.",
+        status: TaskStatus.PENDING,
+      });
+
+      await createTestTask(agent, {
+        title: "Completed task",
+        description: "This task has been completed.",
+        status: TaskStatus.COMPLETED,
+      });
+
+      const response = await agent.get("/api/tasks?status=pending");
+
+      expect(response.status).toBe(200);
+      expect(response.body.tasks).toHaveLength(1);
+      expect(response.body.tasks[0].status).toBe("pending");
+      expect(response.body.pagination.total).toBe(1);
+    });
+
+    it("should search task titles case-insensitively", async () => {
+      const agent = await createAuthenticatedAgent(user);
+
+      await createTestTask(agent, {
+        title: "Complete API documentation",
+        description: "Write documentation for the API.",
+      });
+
+      await createTestTask(agent, {
+        title: "Fix frontend layout",
+        description: "Improve the frontend page layout.",
+      });
+
+      const response = await agent.get("/api/tasks?search=api");
+
+      expect(response.status).toBe(200);
+      expect(response.body.tasks).toHaveLength(1);
+      expect(response.body.tasks[0].title).toBe("Complete API documentation");
+    });
+
+    it("should sort tasks from oldest to newest", async () => {
+      const agent = await createAuthenticatedAgent(user);
+
+      await createTestTask(agent, {
+        title: "First task",
+        description: "This is the first task created.",
+      });
+
+      await createTestTask(agent, {
+        title: "Second task",
+        description: "This is the second task created.",
+      });
+
+      const response = await agent.get("/api/tasks?sort=oldest");
+
+      expect(response.status).toBe(200);
+      expect(response.body.tasks).toHaveLength(2);
+      expect(
+        response.body.tasks.map((task: { title: string }) => task.title),
+      ).toEqual(["First task", "Second task"]);
+    });
+
+    it("should paginate tasks and return correct metadata", async () => {
+      const agent = await createAuthenticatedAgent(user);
+
+      for (let i = 1; i <= 5; i++) {
+        await createTestTask(agent, {
+          title: `Task number ${i}`,
+          description: `Description for task number ${i}.`,
+        });
+      }
+
+      const response = await agent.get("/api/tasks?page=2&limit=2");
+
+      expect(response.status).toBe(200);
+      expect(response.body.tasks).toHaveLength(2);
+      expect(response.body.pagination).toEqual({
+        page: 2,
+        limit: 2,
+        total: 5,
+        totalPages: 3,
+      });
+
+      const beyondLastPage = await agent.get("/api/tasks?page=4&limit=2");
+
+      expect(beyondLastPage.status).toBe(200);
+      expect(beyondLastPage.body.tasks).toEqual([]);
+    });
+
+    it("should reject invalid query parameters", async () => {
+      const agent = await createAuthenticatedAgent(user);
+
+      const invalidPagination = await agent.get("/api/tasks?page=-1&limit=200");
+
+      expect(invalidPagination.status).toBe(400);
+      expect(invalidPagination.body.success).toBe(false);
+
+      const invalidStatus = await agent.get("/api/tasks?status=invalid");
+
+      expect(invalidStatus.status).toBe(400);
+      expect(invalidStatus.body.success).toBe(false);
     });
   });
 

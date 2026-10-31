@@ -32,5 +32,18 @@ export const updateTaskSchema = createTaskSchema
     message: "At least one field must be provided",
   });
 
+export const getTasksQuerySchema = z.object({
+  status: z.enum(TaskStatus).optional(),
+
+  search: z.string().trim().max(100).optional(),
+
+  sort: z.enum(["newest", "oldest"]).default("newest"),
+
+  page: z.coerce.number<string>().int().min(1).default(1),
+
+  limit: z.coerce.number<string>().int().min(1).max(100).default(10),
+});
+
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+export type GetTasksQueryInput = z.infer<typeof getTasksQuerySchema>;

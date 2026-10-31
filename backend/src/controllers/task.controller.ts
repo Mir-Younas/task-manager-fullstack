@@ -6,7 +6,11 @@ import {
   updateTask,
 } from "../services/task.service";
 import { asyncHandler } from "../utils/async-handler";
-import { CreateTaskInput, UpdateTaskInput } from "../validation/task.schema";
+import { getTasksQuerySchema } from "../validation/task.schema";
+import type {
+  CreateTaskInput,
+  UpdateTaskInput,
+} from "../validation/task.schema";
 
 type TaskParams = {
   taskId: string;
@@ -29,11 +33,14 @@ export const handleCreateTask = asyncHandler<CreateTaskInput>(
 export const handleFetchTasks = asyncHandler(async (req, res) => {
   const user = req.user!;
 
-  const tasks = await fetchTasks(user.id, user.role);
+  const query = getTasksQuerySchema.parse(req.query);
+
+  const { tasks, pagination } = await fetchTasks(user.id, user.role, query);
 
   return res.status(200).json({
     success: true,
     tasks,
+    pagination,
   });
 });
 
