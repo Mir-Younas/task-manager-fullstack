@@ -148,6 +148,7 @@ export const loginUser = async (body: LoginInput) => {
 
   if (!passwordMatches) {
     await registerFailedLogin(user.id);
+    throw new AppError("Invalid email or password", 401);
   }
 
   if (user.failedLoginAttempts > 0 || user.loginLockedUntil) {
@@ -284,7 +285,11 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
     return;
   }
 
-  await createAndSendVerificationEmail(user.id, user.email);
+  const emailSent = await createAndSendVerificationEmail(user.id, user.email);
+
+  if (!emailSent) {
+    throw new AppError("Unable to send verification email at this time", 503);
+  }
 };
 
 export const forgotPassword = async (
