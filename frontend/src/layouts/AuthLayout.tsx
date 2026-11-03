@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { CheckCircle2, Layers3, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
+
+import Logo from "../components/common/Logo";
 
 interface AuthLayoutProps {
   title: string;
@@ -30,12 +32,8 @@ const AuthLayout = ({
           <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
 
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500">
-              <Layers3 size={25} />
-            </div>
-
-            <span className="text-2xl font-bold tracking-tight">TaskFlow</span>
+          <div className="relative z-10">
+            <Logo variant="light" />
           </div>
 
           <div className="relative z-10 max-w-xl">
@@ -81,11 +79,11 @@ const AuthLayout = ({
         </section>
       )}
 
-      {/* Soft background accents — Signup only */}
+      {/* Soft background accents — Centered auth pages */}
       {isCentered && (
         <>
-          <div className="pointer-events-none absolute -top-40 -right-40 h-[520px] w-[520px] rounded-full bg-indigo-300/30 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-40 -left-40 h-[520px] w-[520px] rounded-full bg-blue-300/30 blur-3xl" />
+          <div className="pointer-events-none absolute -top-40 -right-40 h-130 w-130 rounded-full bg-indigo-300/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -left-40 h-130 w-130 rounded-full bg-blue-300/30 blur-3xl" />
           <div className="pointer-events-none absolute top-1/3 left-1/4 h-80 w-80 rounded-full bg-indigo-100/40 blur-3xl" />
         </>
       )}
@@ -98,26 +96,16 @@ const AuthLayout = ({
             : "flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 lg:px-10"
         }
       >
-        <div
-          className={
-            isCentered ? "w-full max-w-[600px]" : "w-full max-w-[480px]"
-          }
-        >
+        <div className={isCentered ? "w-full max-w-150" : "w-full max-w-120"}>
           {/* Logo */}
           <div
             className={
               isCentered
-                ? "mb-10 flex items-center justify-center gap-3"
-                : "mb-12 flex items-center gap-3 lg:hidden"
+                ? "mb-10 flex items-center justify-center"
+                : "mb-12 flex items-center lg:hidden"
             }
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white">
-              <Layers3 size={25} />
-            </div>
-
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
-              TaskFlow
-            </span>
+            <Logo />
           </div>
 
           {/* Page heading */}
