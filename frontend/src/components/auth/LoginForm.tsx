@@ -3,14 +3,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from "lucide-react";
+import type { z } from "zod";
 
 import { useAuth } from "../../hooks/useAuth";
 import { authService } from "../../services/auth.service";
 import { ApiError } from "../../utils/api-error";
-import {
-  loginSchema,
-  type LoginFormValues,
-} from "../../validations/auth.validation";
+import { loginSchema } from "../../validations/auth.validation";
 
 const EMAIL_NOT_VERIFIED_MESSAGE = "Please verify your email before logging in";
 
@@ -31,7 +29,11 @@ const LoginForm = () => {
     handleSubmit,
     getValues,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({
+  } = useForm<
+    z.input<typeof loginSchema>,
+    unknown,
+    z.output<typeof loginSchema>
+  >({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -46,7 +48,9 @@ const LoginForm = () => {
     setResendError("");
   };
 
-  const onSubmit = async (data: LoginFormValues): Promise<void> => {
+  const onSubmit = async (
+    data: z.output<typeof loginSchema>,
+  ): Promise<void> => {
     clearVerificationState();
 
     try {
@@ -201,7 +205,7 @@ const LoginForm = () => {
               onClick={() => setShowPassword((previous) => !previous)}
               aria-label={showPassword ? "Hide password" : "Show password"}
               aria-pressed={showPassword}
-              className="absolute inset-y-0 right-2 flex w-11 items-center justify-center rounded-lg text-slate-400 transition-colors hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-indigo-500"
+              className="absolute inset-y-0 right-2 flex w-11 items-center justify-center rounded-lg text-slate-400 transition-colors hover:text-slate-700 focus-visible:outline-2 focus-visible:ring-2 focus-visible:ring-indigo-500"
             >
               {showPassword ? <EyeOff size={21} /> : <Eye size={21} />}
             </button>

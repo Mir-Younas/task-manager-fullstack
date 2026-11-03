@@ -144,7 +144,9 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
               placeholder="Enter your new password"
               aria-invalid={!!errors.password}
               aria-describedby={
-                errors.password ? "reset-password-error" : undefined
+                errors.password
+                  ? "reset-password-requirements reset-password-error"
+                  : "reset-password-requirements"
               }
               {...register("password")}
               className={inputClassName}
@@ -160,6 +162,14 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
               {showPassword ? <EyeOff size={21} /> : <Eye size={21} />}
             </button>
           </div>
+
+          <p
+            id="reset-password-requirements"
+            className="mt-2 text-sm leading-6 text-slate-500"
+          >
+            Use 8–64 characters, including uppercase and lowercase letters, a
+            number, and a special character.
+          </p>
 
           {errors.password && (
             <p

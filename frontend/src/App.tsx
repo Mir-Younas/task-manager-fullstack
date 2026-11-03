@@ -10,6 +10,8 @@ import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import DashboardLayout from "./layouts/DashboardLayout";
+import TasksPage from "./pages/TasksPage";
 
 const App = () => {
   return (
@@ -29,11 +31,13 @@ const App = () => {
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/tasks" element={<div>Tasks Page</div>} />
+          <Route element={<DashboardLayout />}>
+            <Route path="/tasks" element={<TasksPage />} />
+          </Route>
         </Route>
 
         {/* Unknown routes */}
-        <Route path="*"  element={<NotFound />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

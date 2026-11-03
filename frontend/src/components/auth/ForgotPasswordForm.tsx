@@ -3,13 +3,11 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle2, LoaderCircle, Mail } from "lucide-react";
+import type { z } from "zod";
 
 import { authService } from "../../services/auth.service";
 import { ApiError } from "../../utils/api-error";
-import {
-  forgotPasswordSchema,
-  type ForgotPasswordFormValues,
-} from "../../validations/auth.validation";
+import { forgotPasswordSchema } from "../../validations/auth.validation";
 
 const ForgotPasswordForm = () => {
   const [serverError, setServerError] = useState("");
@@ -19,14 +17,20 @@ const ForgotPasswordForm = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<ForgotPasswordFormValues>({
+  } = useForm<
+    z.input<typeof forgotPasswordSchema>,
+    unknown,
+    z.output<typeof forgotPasswordSchema>
+  >({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: "",
     },
   });
 
-  const onSubmit = async (data: ForgotPasswordFormValues): Promise<void> => {
+  const onSubmit = async (
+    data: z.output<typeof forgotPasswordSchema>,
+  ): Promise<void> => {
     setServerError("");
 
     try {
