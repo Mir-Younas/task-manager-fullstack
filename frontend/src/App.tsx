@@ -1,23 +1,29 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import MainLayout from "./layouts/MainLayout";
 
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import NotFound from "./pages/NotFound";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public authentication routes */}
+        {/* Public website */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+        </Route>
+
+        {/* Authentication routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/email-verification" element={<EmailVerification />} />
-
-        {/* Pages to implement later */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/password-reset" element={<ResetPassword />} />
 
@@ -26,11 +32,8 @@ const App = () => {
           <Route path="/tasks" element={<div>Tasks Page</div>} />
         </Route>
 
-        {/* Default route */}
-        <Route path="/" element={<Navigate to="/tasks" replace />} />
-
         {/* Unknown routes */}
-        <Route path="*" element={<div>Page Not Found</div>} />
+        <Route path="*"  element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
