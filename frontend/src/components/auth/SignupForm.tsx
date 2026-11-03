@@ -40,9 +40,7 @@ const SignupForm = () => {
       navigate("/login", { replace: true });
     }, 4000);
 
-    return () => {
-      window.clearTimeout(timer);
-    };
+    return () => window.clearTimeout(timer);
   }, [signupResult?.emailSent, resendMessage, navigate]);
 
   const {
@@ -116,7 +114,6 @@ const SignupForm = () => {
   return (
     <div className="w-full">
       {signupResult ? (
-        /* Signup response */
         <div
           role="status"
           className="rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-8 text-center shadow-sm"
@@ -142,10 +139,16 @@ const SignupForm = () => {
           </p>
 
           {signupResult.emailSent || resendMessage ? (
-            <div className="mt-7 flex items-center justify-center gap-2 text-sm font-medium text-indigo-600">
-              <LoaderCircle size={17} className="animate-spin" />
-              Redirecting to login...
-            </div>
+            <>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                Please verify your email address before logging in.
+              </p>
+
+              <div className="mt-7 flex items-center justify-center gap-2 text-sm font-medium text-indigo-600">
+                <LoaderCircle size={17} className="animate-spin" />
+                Redirecting to login...
+              </div>
+            </>
           ) : (
             <div className="mt-7 space-y-4">
               <button
@@ -287,7 +290,9 @@ const SignupForm = () => {
                   placeholder="Create a strong password"
                   aria-invalid={!!errors.password}
                   aria-describedby={
-                    errors.password ? "password-error" : undefined
+                    errors.password
+                      ? "password-requirements password-error"
+                      : "password-requirements"
                   }
                   {...register("password")}
                   className={`${inputClassName} pr-14`}
@@ -303,6 +308,14 @@ const SignupForm = () => {
                   {showPassword ? <EyeOff size={21} /> : <Eye size={21} />}
                 </button>
               </div>
+
+              <p
+                id="password-requirements"
+                className="mt-2 text-sm leading-6 text-slate-500"
+              >
+                Use 8–64 characters, including uppercase and lowercase letters,
+                a number, and a special character.
+              </p>
 
               {errors.password && (
                 <p
@@ -388,7 +401,7 @@ const SignupForm = () => {
               </div>
             )}
 
-            {/* Signup button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={isSubmitting}
@@ -405,7 +418,6 @@ const SignupForm = () => {
             </button>
           </form>
 
-          {/* Login link */}
           <p className="mt-8 text-center text-base text-slate-500">
             Already have an account?{" "}
             <Link

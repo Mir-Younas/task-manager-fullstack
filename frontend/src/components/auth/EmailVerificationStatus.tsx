@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -17,16 +18,21 @@ interface EmailVerificationStatusProps {
   token: string | null;
 }
 
-const EmailVerificationStatus = ({ token }: EmailVerificationStatusProps) => {
-  const [status, setStatus] = useState<VerificationStatus>(
-    token ? "loading" : "error",
-  );
+interface VerificationRequest {
+  token: string;
+  promise: Promise<ApiResponse>;
+}
 
-  const [message, setMessage] = useState(
-    token ? "" : "The verification link is missing a token.",
-  );
+const EmailVerificationStatus = ({
+  token,
+}: EmailVerificationStatusProps) => {
+  const [verificationResult, setVerificationResult] = useState<{
+    token: string | null;
+    status: VerificationStatus;
+    message: string;
+  } | null>(null);
 
-  const verificationRequest = useRef<Promise<ApiResponse> | null>(null);
+  const verificationRequest = useRef<VerificationRequest | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -36,33 +42,57 @@ const EmailVerificationStatus = ({ token }: EmailVerificationStatusProps) => {
     let active = true;
 
     // Reuse the request during React Strict Mode effect replays.
-    if (!verificationRequest.current) {
-      verificationRequest.current = authService.verifyEmail({ token });
+    // Create a new request only when the token changes.
+    if (verificationRequest.current?.token !== token) {
+      verificationRequest.current = {
+        token,
+        promise: authService.verifyEmail({ token }),
+      };
     }
 
-    verificationRequest.current
+    const request = verificationRequest.current.promise;
+
+    request
       .then((response) => {
         if (!active) return;
 
-        setMessage(response.message);
-        setStatus("success");
+        setVerificationResult({
+          token,
+          status: "success",
+          message: response.message,
+        });
       })
       .catch((error: unknown) => {
         if (!active) return;
 
-        setMessage(
-          error instanceof ApiError
-            ? error.message
-            : "Unable to verify your email. Please try again.",
-        );
-
-        setStatus("error");
+        setVerificationResult({
+          token,
+          status: "error",
+          message:
+            error instanceof ApiError
+              ? error.message
+              : "Unable to verify your email. Please try again.",
+        });
       });
 
     return () => {
       active = false;
     };
   }, [token]);
+
+  // Only display results belonging to the current token.
+  // This also resets the UI to loading when the token changes.
+  const status: VerificationStatus = !token
+    ? "error"
+    : verificationResult?.token === token
+      ? verificationResult.status
+      : "loading";
+
+  const message = !token
+    ? "The verification link is missing a token."
+    : verificationResult?.token === token
+      ? verificationResult.message
+      : "";
 
   const isLoading = status === "loading";
   const isSuccess = status === "success";
@@ -131,10 +161,13 @@ const EmailVerificationStatus = ({ token }: EmailVerificationStatusProps) => {
             <p className="flex items-center justify-center gap-2 text-sm leading-6 text-slate-500">
               <MailCheck
                 size={17}
-                className="text-indigo-500"
+                className="shrink-0 text-indigo-500"
                 aria-hidden="true"
               />
-              Need another link? Sign in to request a new one.
+              <span>
+                Need another link? Go to the login page to request a
+                new verification email.
+              </span>
             </p>
           )}
         </div>

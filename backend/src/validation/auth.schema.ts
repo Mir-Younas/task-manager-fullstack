@@ -17,8 +17,9 @@ const strongPasswordSchema = z
   );
 
 const emailSchema = z
-  .email("Invalid email address")
+  .string()
   .trim()
+  .pipe(z.email("Invalid email address"))
   .transform((email) => email.toLowerCase());
 
 const tokenSchema = z.string().min(1, "Token is required");
