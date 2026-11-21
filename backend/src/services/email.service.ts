@@ -1,4 +1,6 @@
+
 import nodemailer, { type Transporter } from "nodemailer";
+import { Resend } from "resend";
 
 import { buildActionEmailTemplate } from "../templates/email/action-email.template";
 import { logger } from "../utils/logger";
@@ -6,6 +8,7 @@ import { AppError } from "../utils/app-error";
 
 export class EmailService {
   private transporter: Transporter | null = null;
+  private resend: Resend | null = null;
   private readonly appName: string;
 
   constructor() {
@@ -42,18 +45,53 @@ export class EmailService {
     return this.transporter;
   }
 
+  private getResend(): Resend {
+    if (this.resend) {
+      return this.resend;
+    }
+
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("RESEND_API_KEY is missing");
+    }
+
+    this.resend = new Resend(apiKey);
+    return this.resend;
+  }
+
   async sendEmail(to: string, subject: string, html: string): Promise<void> {
     try {
-      const transporter = this.getTransporter();
+      if (process.env.NODE_ENV === "production") {
+        const resend = this.getResend();
+        const from = process.env.RESEND_FROM_EMAIL;
 
-      const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER;
+        if (!from) {
+          throw new Error("RESEND_FROM_EMAIL is missing");
+        }
 
-      await transporter.sendMail({
-        from: fromEmail,
-        to,
-        subject,
-        html,
-      });
+        const { error } = await resend.emails.send({
+          from,
+          to,
+          subject,
+          html,
+        });
+
+        if (error) {
+          throw error;
+        }
+      } else {
+        const transporter = this.getTransporter();
+
+        const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER;
+
+        await transporter.sendMail({
+          from: fromEmail,
+          to,
+          subject,
+          html,
+        });
+      }
 
       logger.debug(
         { component: "EmailService", subject },
