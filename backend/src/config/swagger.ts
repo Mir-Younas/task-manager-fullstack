@@ -37,8 +37,8 @@ const swaggerOptions: swaggerJsdoc.Options = {
   },
 
   apis: [
-    path.join(__dirname, "../docs/**/*.ts"),
-    path.join(__dirname, "../docs/**/*.js"),
+    path.join(__dirname, "../docs/swagger/**/*.docs.ts").replace(/\\/g, "/"),
+    path.join(__dirname, "../docs/swagger/**/*.docs.js").replace(/\\/g, "/"),
   ],
 };
 
