@@ -1,4 +1,5 @@
 import swaggerJsdoc from "swagger-jsdoc";
+import path from "node:path";
 
 import { ACCESS_TOKEN_COOKIE_NAME } from "../constants/auth.constants";
 
@@ -19,7 +20,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
         description: "Local Development Environment",
       },
       {
-        url: "https://task-api-production-8979.up.railway.app",
+        url: "https://taskflow-api-neon-nine.vercel.app",
         description: "Production Environment",
       },
     ],
@@ -35,7 +36,10 @@ const swaggerOptions: swaggerJsdoc.Options = {
     },
   },
 
-  apis: ["./src/docs/**/*.ts"],
+  apis: [
+    path.join(__dirname, "../docs/**/*.ts"),
+    path.join(__dirname, "../docs/**/*.js"),
+  ],
 };
 
 export const swaggerSpec = swaggerJsdoc(swaggerOptions);
