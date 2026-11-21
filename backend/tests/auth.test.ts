@@ -1,12 +1,5 @@
-
 import request from "supertest";
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import app from "../src/app";
 import { User } from "../src/models/user.model";
@@ -90,30 +83,23 @@ describe("Auth API", () => {
 
       expect(response.status).toBe(409);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe(
-        "Email already registered",
-      );
+      expect(response.body.message).toBe("Email already registered");
     });
 
     it("should handle concurrent signup requests with the same email", async () => {
       await User.init();
 
       const requests = Array.from({ length: 10 }, () =>
-        request(app)
-          .post("/api/auth/signup")
-          .send(validUser),
+        request(app).post("/api/auth/signup").send(validUser),
       );
 
       const responses = await Promise.all(requests);
 
-      expect(responses.filter((res) => res.status === 201))
-        .toHaveLength(1);
+      expect(responses.filter((res) => res.status === 201)).toHaveLength(1);
 
-      expect(responses.filter((res) => res.status === 409))
-        .toHaveLength(9);
+      expect(responses.filter((res) => res.status === 409)).toHaveLength(9);
 
-      expect(responses.filter((res) => res.status >= 500))
-        .toHaveLength(0);
+      expect(responses.filter((res) => res.status >= 500)).toHaveLength(0);
     });
   });
 
@@ -155,42 +141,32 @@ describe("Auth API", () => {
     it("should reject an incorrect password", async () => {
       await registerTestUser(validUser);
 
-      const response = await request(app)
-        .post("/api/auth/login")
-        .send({
-          email: validUser.email,
-          password: "Wrong@1234",
-        });
+      const response = await request(app).post("/api/auth/login").send({
+        email: validUser.email,
+        password: "Wrong@1234",
+      });
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe(
-        "Invalid email or password",
-      );
+      expect(response.body.message).toBe("Invalid email or password");
     });
 
     it("should reject a nonexistent user", async () => {
-      const response = await request(app)
-        .post("/api/auth/login")
-        .send({
-          email: "missing@example.com",
-          password: "Test@1234",
-        });
+      const response = await request(app).post("/api/auth/login").send({
+        email: "missing@example.com",
+        password: "Test@1234",
+      });
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe(
-        "Invalid email or password",
-      );
+      expect(response.body.message).toBe("Invalid email or password");
     });
 
     it("should reject an invalid login request", async () => {
-      const response = await request(app)
-        .post("/api/auth/login")
-        .send({
-          email: "invalid-email",
-          password: "",
-        });
+      const response = await request(app).post("/api/auth/login").send({
+        email: "invalid-email",
+        password: "",
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
@@ -210,23 +186,19 @@ describe("Auth API", () => {
 
       const agent = request.agent(app);
 
-      await agent
-        .post("/api/auth/login")
-        .send(loginCredentials)
-        .expect(200);
+      await agent.post("/api/auth/login").send(loginCredentials).expect(200);
 
       const response = await agent.get("/api/auth/me");
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
+      expect(response.body.user).toBeDefined();
     });
   });
 
   describe("POST /api/auth/refresh", () => {
     it("should reject requests without a refresh token", async () => {
-      const response = await request(app)
-        .post("/api/auth/refresh");
+      const response = await request(app).post("/api/auth/refresh");
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
@@ -237,26 +209,20 @@ describe("Auth API", () => {
 
       const agent = request.agent(app);
 
-      await agent
-        .post("/api/auth/login")
-        .send(loginCredentials)
-        .expect(200);
+      await agent.post("/api/auth/login").send(loginCredentials).expect(200);
 
       const response = await agent.post("/api/auth/refresh");
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.message).toBe(
-        "Session refreshed successfully",
-      );
+      expect(response.body.message).toBe("Session refreshed successfully");
       expect(response.headers["set-cookie"]).toBeDefined();
     });
   });
 
   describe("POST /api/auth/logout", () => {
     it("should logout successfully", async () => {
-      const response = await request(app)
-        .post("/api/auth/logout");
+      const response = await request(app).post("/api/auth/logout");
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
