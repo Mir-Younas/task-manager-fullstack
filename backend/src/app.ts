@@ -7,6 +7,7 @@ import taskRouter from "./routes/task.routes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import cors from "cors";
+import { connectDB } from "./config/db";
 
 const app = express();
 
@@ -18,6 +19,18 @@ app.use(
     credentials: true,
   }),
 );
+
+// Initialize or reuse MongoDB connection outside the test environment
+if (process.env.NODE_ENV !== "test") {
+  app.use(async (_req, _res, next) => {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
+}
 
 if (process.env.NODE_ENV !== "test") {
   app.use(morgan("dev"));
@@ -35,6 +48,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/tasks", taskRouter);
+
 app.use(
   "/api-docs",
   swaggerUi.serve,
