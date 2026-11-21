@@ -6,6 +6,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import type { Task, TaskStatus } from "../../types/task.types";
 
@@ -94,28 +95,33 @@ const TaskCard = ({ task, onEdit, onDelete }: TaskCardProps) => {
         </div>
       </div>
 
-      <h3 className="mb-2 wrap-break-word text-lg font-bold text-slate-900">
-        {task.title}
-      </h3>
+      <Link
+        to={`/tasks/${encodeURIComponent(task._id)}`}
+        className="group flex flex-1 flex-col rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600"
+      >
+        <h3 className="mb-2 wrap-break-word text-lg font-bold text-slate-900 transition-colors group-hover:text-indigo-600">
+          {task.title}
+        </h3>
 
-      <p className="mb-6 flex-1 wrap-break-word whitespace-pre-wrap text-sm leading-6 text-slate-600">
-        {task.description}
-      </p>
+        <p className="mb-6 flex-1 wrap-break-word whitespace-pre-wrap text-sm leading-6 text-slate-600">
+          {task.description}
+        </p>
 
-      <div className="space-y-3 border-t border-slate-100 pt-4">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <CalendarDays size={15} aria-hidden="true" />
-          <span>Created {formatDate(task.createdAt)}</span>
+        <div className="space-y-3 border-t border-slate-100 pt-4">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <CalendarDays size={15} aria-hidden="true" />
+            <span>Created {formatDate(task.createdAt)}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="font-medium text-slate-700">Created by:</span>
+
+            <span className="truncate">
+              {task.author?.name ?? "Unknown user"}
+            </span>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="font-medium text-slate-700">Created by:</span>
-
-          <span className="truncate">
-            {task.author?.name ?? "Unknown user"}
-          </span>
-        </div>
-      </div>
+      </Link>
     </article>
   );
 };
