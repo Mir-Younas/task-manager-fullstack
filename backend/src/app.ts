@@ -5,6 +5,7 @@ import { globalErrorHandler } from "./middleware/error.middleware";
 import morgan from "morgan";
 import taskRouter from "./routes/task.routes";
 import swaggerUi from "swagger-ui-express";
+import swaggerUiDist from "swagger-ui-dist";
 import { swaggerSpec } from "./config/swagger";
 import cors from "cors";
 import { connectDB } from "./config/db";
@@ -49,8 +50,11 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/tasks", taskRouter);
 
+const swaggerAssetsPath = swaggerUiDist.getAbsoluteFSPath();
+
 app.use(
   "/api-docs",
+  express.static(swaggerAssetsPath, { index: false }),
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
     swaggerOptions: {
