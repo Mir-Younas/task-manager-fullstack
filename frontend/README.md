@@ -1,217 +1,298 @@
 # TaskFlow Frontend
 
-A responsive task management web application built with **React, TypeScript, Vite, and Tailwind CSS**. It connects to the Task Management API to provide account authentication, protected navigation, and task management through a clean dashboard interface.
+A modern, responsive task management web application built with **React 19, TypeScript, Vite 8, and Tailwind CSS v4**.
 
-> **Deployment status:** The frontend is currently documented for local development. Add the production frontend URL and confirm cross-origin authentication behavior after deployment.
+TaskFlow provides a clean interface for account authentication, organizing tasks, tracking progress, and managing daily productivity.
+
+## Live Application
+
+**Frontend:** https://taskflow-frontend-hsz5.onrender.com
+
+**Deployment Platform:** Render Static Site
 
 ## Features
 
-### Authentication and account management
+### Authentication and Account Management
 
-- Email/password signup and login
-- Email verification using a verification link
-- Forgot-password and reset-password flows
-- Authenticated session restoration through the backend's `/api/auth/me` endpoint
-- Protected dashboard routes and logout
-- HTTP-only cookie-based authentication managed by the backend
-- Form validation and user-friendly API error messages
+- Email and password registration and login
+- Email verification through verification links
+- Resend verification email
+- Forgot-password and password-reset pages
+- Google sign-in
+- Automatic session restoration
+- Protected dashboard routes
+- Logout functionality
+- Form validation and API error handling
+- Cookie-based authentication through the API
 
-### Task management
+### Task Management
 
-- Create, list, view, edit, and delete tasks
-- Dedicated task details page at `/tasks/:taskId`
+- Create, view, update, and delete tasks
+- Dedicated task details page
 - Task statuses: Pending, In Progress, and Completed
-- Search tasks by title and filter by status
-- Sort by creation date (newest or oldest)
+- Search tasks by title
+- Filter tasks by status
+- Sort tasks by creation date
 - Paginated task list
-- Confirmation dialog before deleting a task
-- Loading, empty, and error states for task requests
-- Display task author and creation/update dates
+- Display task author and timestamps
+- Confirmation dialog before deletion
+- Loading, empty, and error states
 
-### Interface and developer experience
+### User Interface
 
-- Responsive dashboard layout with sidebar and header
-- Task cards, forms, and dialogs built as reusable components
-- Client-side routing with React Router
-- Typed API service layer using Axios
-- React Hook Form and Zod for form validation
-- ESLint and TypeScript build checks
+- Modern, responsive dashboard
+- Sidebar and header navigation
+- Reusable components and dialogs
+- Client-side navigation with React Router
+- Axios-based API communication
+- React Hook Form and Zod validation
+- Lucide React icons
 
-## Technology
+## Technology Stack
 
-| Category | Tools |
+| Category | Technology |
 | --- | --- |
-| UI | React 19, TypeScript |
-| Build tooling | Vite 8 |
+| UI Library | React 19 |
+| Language | TypeScript |
+| Build Tool | Vite 8 |
 | Styling | Tailwind CSS v4 |
 | Routing | React Router |
-| Forms and validation | React Hook Form, Zod |
-| HTTP client | Axios |
+| Forms | React Hook Form |
+| Validation | Zod |
+| HTTP Client | Axios |
 | Icons | Lucide React |
-| Code quality | ESLint, TypeScript |
+| Code Quality | ESLint, TypeScript |
+| Hosting | Render Static Site |
 
-## Application routes
+## Application Routes
 
-| Path | Description | Access |
+| Route | Description | Access |
 | --- | --- | --- |
-| `/` | Public home page | Public |
-| `/login` | Sign in | Public |
-| `/signup` | Create an account | Public |
-| `/email-verification` | Verify an email address using a link token | Public |
-| `/forgot-password` | Request a password reset | Public |
-| `/password-reset` | Set a new password using a reset token | Public |
-| `/tasks` | Task dashboard with search, filters, and pagination | Authenticated |
-| `/tasks/:taskId` | Individual task details, editing, and deletion | Authenticated |
+| `/` | Home page | Public |
+| `/login` | Login | Public |
+| `/signup` | Registration | Public |
+| `/email-verification` | Email verification | Public |
+| `/forgot-password` | Forgot password | Public |
+| `/password-reset` | Reset password | Public |
+| `/tasks` | Task dashboard | Protected |
+| `/tasks/:taskId` | Task details | Protected |
 | `*` | Not-found page | Public |
 
-Protected routes use the application's authentication context and `ProtectedRoute`. The backend independently enforces task ownership and administrator permissions; client-side route protection is not a substitute for API authorization.
+Protected routes use the authentication context and `ProtectedRoute` component.
 
-## Getting started
+## Getting Started
 
 ### Prerequisites
 
-- Node.js and npm compatible with the frontend's `package.json` and Vite version
-- A running Task Management API
-- Backend environment configured for the frontend origin, including CORS and authentication cookies
+- Node.js compatible with Vite 8
+- npm
+- A running TaskFlow API
 
 ### Installation
 
-From the repository root:
+Clone the repository:
 
 ```bash
-cd frontend
+git clone https://github.com/Mir-Younas/task-manager-fullstack.git
+cd task-manager-fullstack/frontend
+```
+
+Install dependencies:
+
+```bash
 npm install
 ```
 
-### Environment configuration
+### Environment Configuration
 
-Configure the API base URL using the environment variable expected by `frontend/src/config/axios.ts`. For a typical Vite setup, this is a `VITE_`-prefixed variable, for example:
+Create a `.env` file inside the `frontend` directory.
+
+For local development:
 
 ```dotenv
-VITE_API_URL=http://localhost:5000
+VITE_API_BASE_URL=http://localhost:5000
 ```
 
-**Check `frontend/src/config/axios.ts` for the exact variable name before using this example.** If the Axios client already uses a fixed development URL or a Vite proxy, follow that configuration instead.
+For production:
 
-The backend's local development configuration should allow the frontend origin, typically `http://localhost:3000`.
+```dotenv
+VITE_API_BASE_URL=https://taskflow-api-tm54.onrender.com
+```
 
-Never put JWT secrets, refresh tokens, SMTP credentials, or other server-only secrets in frontend environment variables. Vite exposes `VITE_` variables to browser code.
+Ensure the environment variable matches the one used in `src/config/axios.ts`.
 
-### Run locally
+Only expose public configuration through Vite environment variables. Never store private API keys or authentication secrets in the frontend.
+
+### Run Locally
 
 ```bash
 npm run dev
 ```
 
-Open the local URL printed by Vite. In the current development setup, the frontend is accessed at:
+Open:
 
 ```text
 http://localhost:3000
 ```
 
-The backend's default local URL is:
+## Authentication
 
-```text
-http://localhost:5000
-```
+The frontend provides interfaces for email/password authentication and Google sign-in.
 
-Interactive backend API documentation is available at `http://localhost:5000/api-docs` when the API is running locally.
+Users can register, verify their email addresses, sign in, request password resets, and manage their sessions.
 
-## Authentication and API integration
+The application uses authentication context to maintain user state and protect dashboard routes.
 
-The frontend communicates with the Express API through a shared Axios client and dedicated service modules.
+A shared Axios client handles API communication and authentication-related requests.
 
-**Authentication flow:** Users register and verify their email, then sign in. The backend issues HTTP-only cookies for the session. The frontend uses authentication context to track the current user and restore an existing session. Axios handles API communication and session-refresh behavior.
+## Task Management
 
-**Task flow:** The dashboard requests the authenticated user's accessible tasks with optional search, status, sort, and pagination parameters. Selecting a task opens `/tasks/:taskId`, which requests that task from the API. Creating, updating, and deleting tasks uses the backend's protected task endpoints.
+Authenticated users can manage tasks through the dashboard.
 
-| Method | Endpoint | Frontend use |
-| --- | --- | --- |
-| `GET` | `/api/auth/me` | Restore the current user session |
-| `POST` | `/api/auth/signup` | Register |
-| `POST` | `/api/auth/login` | Sign in |
-| `POST` | `/api/auth/logout` | Sign out |
-| `POST` | `/api/auth/refresh` | Refresh the session |
-| `POST` | `/api/auth/verify-email` | Verify email |
-| `POST` | `/api/auth/forgot-password` | Request password reset |
-| `POST` | `/api/auth/reset-password` | Reset password |
-| `GET` | `/api/tasks` | List, search, filter, sort, and paginate tasks |
-| `GET` | `/api/tasks/:taskId` | View a task |
-| `POST` | `/api/tasks` | Create a task |
-| `PATCH` | `/api/tasks/:taskId` | Update a task |
-| `DELETE` | `/api/tasks/:taskId` | Delete a task |
+The task list supports searching, filtering, sorting, and pagination.
 
-The backend also provides email-verification resend and Google OAuth endpoints. This README does not claim a dedicated frontend Google sign-in control or resend-verification screen without confirming those UI implementations.
+Users can open an individual task to view its details, edit its information, or delete it after confirmation.
 
-**Task status values:** The frontend task types currently use `pending`, `in-progress`, and `completed`. Confirm that the deployed API accepts the same values; the backend README currently documents `in_progress` for the middle status.
+The interface displays loading indicators, empty states, and error messages where appropriate.
 
-## Project layout
+## Project Structure
 
 ```text
 frontend/
-├── public/                  # Public static assets
+├── public/
 ├── src/
 │   ├── components/
-│   │   ├── auth/             # Authentication forms and verification UI
-│   │   ├── dashboard/        # Dashboard navigation and header components
-│   │   └── tasks/            # Task cards, filters, modals, pagination, dialogs
-│   ├── config/               # Shared Axios configuration
-│   ├── hooks/                # Task fetching hook
-│   ├── layouts/              # Public and dashboard layouts
-│   ├── pages/                # Route pages, including task details
-│   ├── routes/               # Protected-route handling
-│   ├── services/             # API service modules
-│   ├── types/                # TypeScript data contracts
-│   ├── utils/                # Shared helpers and API error handling
-│   ├── validations/          # Zod form schemas
-│   ├── App.tsx               # Application routes
-│   └── main.tsx              # React entry point
+│   │   ├── auth/
+│   │   ├── dashboard/
+│   │   └── tasks/
+│   ├── config/
+│   ├── hooks/
+│   ├── layouts/
+│   ├── pages/
+│   ├── routes/
+│   ├── services/
+│   ├── types/
+│   ├── utils/
+│   ├── validations/
+│   ├── App.tsx
+│   └── main.tsx
 ├── index.html
 ├── package.json
 └── vite.config.ts
 ```
 
-This layout highlights the main application folders; it is not an exhaustive file inventory.
+## Development Commands
 
-## Quality checks
-
-Run from the `frontend` directory:
+Start the development server:
 
 ```bash
-# Check lint rules
-npm run lint
+npm run dev
+```
 
-# Type-check and build production assets
+Run ESLint:
+
+```bash
+npm run lint
+```
+
+Create a production build:
+
+```bash
 npm run build
 ```
 
-A successful production build creates optimized frontend assets in `dist/`. These commands should be rerun after the latest task-details changes before merging or deploying. This README does not claim an automated frontend test suite or passing results that have not been independently verified.
-
-## Error handling and access control
-
-- Form validation runs before submitting requests.
-- API failures are displayed in the relevant page, form, or dialog.
-- Task lists and task details have loading and failure states.
-- Delete actions require confirmation.
-- The API remains responsible for deciding whether a user can read, edit, or delete a task.
+The production build generates optimized static assets in the `dist/` directory.
 
 ## Deployment
 
-The frontend has not yet been assigned a confirmed production URL in this README. When deploying:
+The frontend is deployed on **Render Static Site**.
 
-1. Build the frontend using `npm run build`.
-2. Configure the production API base URL according to the Axios client.
-3. Configure the backend's allowed frontend origin and cookie settings.
-4. Configure the frontend host to serve `index.html` for client-side routes such as `/tasks/:taskId`.
-5. Verify login, session refresh, logout, email verification, password reset, and task CRUD against the deployed API.
-6. Add the confirmed frontend URL here after deployment.
+### Render Configuration
 
-**Backend:** [Railway API health check](https://task-api-production-8979.up.railway.app/health) · [Swagger API documentation](https://task-api-production-8979.up.railway.app/api-docs)
+| Setting | Value |
+| --- | --- |
+| Service | `taskflow-frontend` |
+| Type | Static Site |
+| Repository | `Mir-Younas/task-manager-fullstack` |
+| Branch | `main` |
+| Root Directory | `frontend` |
+| Build Command | `npm install && npm run build` |
+| Publish Directory | `dist` |
 
-## Project context
+### Production Environment Variable
 
-Developed as part of a software engineering internship assignment. The frontend is the user-facing application for the Task Management API.
+```dotenv
+VITE_API_BASE_URL=https://taskflow-api-tm54.onrender.com
+```
+
+### Client-Side Routing
+
+The frontend uses React Router.
+
+To support direct navigation and page refreshes, configure the following Render rewrite rule:
+
+| Source | Destination | Action |
+| --- | --- | --- |
+| `/*` | `/index.html` | Rewrite |
+
+This allows routes such as `/login`, `/signup`, and `/tasks/:taskId` to load correctly when accessed directly.
+
+### Deployment Workflow
+
+1. Implement changes on a feature branch.
+2. Test the frontend locally.
+3. Run lint and production build checks.
+4. Push changes to GitHub.
+5. Create and merge a pull request into `main`.
+6. Deploy the latest changes on Render.
+7. Verify the live frontend.
+
+## Error Handling
+
+The frontend includes:
+
+- Client-side form validation
+- API error messages
+- Loading indicators
+- Empty task states
+- Error states for failed requests
+- Protected route handling
+- Confirmation dialogs for destructive actions
+
+## Troubleshooting
+
+### Application Takes Time to Load Data
+
+The connected API may take additional time to respond after inactivity on free hosting.
+
+### Login or Registration Fails
+
+Check that the API base URL is configured correctly and the API is accessible.
+
+### Authentication Session Is Not Restored
+
+Check browser cookie behavior, API connectivity, and Axios credential configuration.
+
+### Refreshing a Page Returns 404
+
+Ensure the Render rewrite rule is configured:
+
+```text
+Source: /*
+Destination: /index.html
+Action: Rewrite
+```
+
+### Environment Variable Changes Are Not Applied
+
+Vite environment variables are included at build time. Rebuild and redeploy the frontend after changing production environment variables.
+
+## Project Context
+
+Developed as part of a **Full-Stack Development Internship Assignment at AppRo8**.
+
+The frontend demonstrates React development, TypeScript, REST API integration, authentication interfaces, responsive design, form validation, and production deployment.
 
 ## License
 
-Refer to the repository's license configuration. The backend README currently lists ISC; confirm the frontend or repository-level license before publishing a unified license statement.
+Refer to the repository's license configuration.
